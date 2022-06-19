@@ -109,6 +109,8 @@ func merge(cs []<-chan int) <-chan int {
 		}(c)
 	}
 
+	// 不使用 goroutine，后面的return out无法执行
+	// 而使用后，相当于提前把out返回出去，其它goroutine才可以读取merge返回的channel中的值
 	go func() {
 		wg.Wait()
 		close(out)
