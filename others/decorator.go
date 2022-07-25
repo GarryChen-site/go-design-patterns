@@ -59,6 +59,8 @@ func Sum2(start, end int64) int64 {
 	return (end - start + 1) * (end + start) / 2
 }
 
+// *********************
+
 func WithServerHeader(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("--->WithServerHeader()")

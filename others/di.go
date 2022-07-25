@@ -78,7 +78,7 @@ func (undo *Undo) Undo() error {
 	index := len(functions) - 1
 	if function := functions[index]; function != nil {
 		function()
-		functions[index] = nil
+		functions[index] = nil // For garbage collection
 	}
 
 	*undo = functions[:index]

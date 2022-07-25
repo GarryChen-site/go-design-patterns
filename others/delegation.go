@@ -33,7 +33,7 @@ func (label Label) Paint() {
 	fmt.Printf("%p:Label.Paint(%q)\n", &label, label.Text)
 }
 
-//因为这个接口可以通过 Label 的嵌入带到新的结构体，
+//因为这个接口可以通过 Label 的嵌入带到新的结构（即上面的），
 //所以，可以在 Button 中重载这个接口方法
 func (button Button) Paint() { // Override
 	fmt.Printf("Button.Paint(%s)\n", button.Text)
