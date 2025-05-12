@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// 将一个整型数组放到一个Channel，并返回这个Channel
+// add an int array to a channel and return the channel
 func echo(nums []int) <-chan int {
 	out := make(chan int)
 	go func() {
@@ -109,8 +109,8 @@ func merge(cs []<-chan int) <-chan int {
 		}(c)
 	}
 
-	// 不使用 goroutine，后面的return out无法执行
-	// 而使用后，相当于提前把out返回出去，其它goroutine才可以读取merge返回的channel中的值
+	// if don't use goroutine, the return out cannot be executed
+	// if use goroutine, it will return out first, and other goroutines can read the value in the channel returned by merge
 	go func() {
 		wg.Wait()
 		close(out)
