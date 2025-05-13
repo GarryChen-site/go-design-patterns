@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// only edit foo function
+// foo must call slow function
+// foo must return when the ctx is timeout
+// if slow finished before ctx timeout, foo must return too
+
 func foo(ctx context.Context) {
 	// slow();
 
