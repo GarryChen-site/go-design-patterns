@@ -24,10 +24,10 @@ func Test_pipe(t *testing.T) {
 	var chans [nProcess]<-chan int
 
 	for i := range chans {
-		chans[i] = sum(prime(in))
+		chans[i] = sum(prime(in)) // return quickly
 	}
 
-	for n := range sum(merge(chans[:])) {
+	for n := range sum(merge(chans[:])) { // will block
 		fmt.Println(n)
 	}
 }
