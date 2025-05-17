@@ -1,8 +1,13 @@
 package others
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 type Store struct {
@@ -59,7 +64,9 @@ func (s *Store) Put(key, value string) {
 func main() {
 	store := NewStore()
 
-	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
 		key := r.URL.Query().Get("key")
 		value, ok := store.Get(key)
 		if !ok {
@@ -69,11 +76,38 @@ func main() {
 		fmt.Fprint(w, value)
 	})
 
-	http.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
 		key := r.URL.Query().Get("key")
 		value := r.URL.Query().Get("value")
 		store.Put(key, value)
 		fmt.Fprint(w, "OK")
 	})
-	http.ListenAndServe(":8080", nil)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	stop := make(chan os.Signal, 1)
+
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("ListenAndServe error: %v\n", err)
+		}
+	}()
+
+	fmt.Println("Server is running on port 8080...")
+	<-stop // Wait for interrupt signal
+	fmt.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		fmt.Printf("Server Shutdown error: %v\n", err)
+	}
+	fmt.Println("Server stopped gracefully.")
+
 }
