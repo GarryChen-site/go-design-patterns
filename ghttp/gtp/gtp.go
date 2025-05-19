@@ -1,22 +1,26 @@
 package gtp
 
-import "net/http"
+import (
+	"net/http"
 
-type HandlerFunc func(http.ResponseWriter, *http.Request)
+	"log"
+)
+
+type HandlerFunc func(*Context)
 
 type Engine struct {
-	router map[string]HandlerFunc
+	router *router
 }
 
 func New() *Engine {
 	return &Engine{
-		router: make(map[string]HandlerFunc),
+		router: newRouter(),
 	}
 }
 
 func (e *Engine) addRoute(method string, path string, handler HandlerFunc) {
-	key := method + "-" + path
-	e.router[key] = handler
+	log.Printf("Route %4s - %s", method, path)
+	e.router.addRoute(method, path, handler)
 }
 
 func (e *Engine) GET(path string, handler HandlerFunc) {
@@ -32,10 +36,6 @@ func (e *Engine) Run(addr string) error {
 }
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	key := req.Method + "-" + req.URL.Path
-	if handler, ok := e.router[key]; ok {
-		handler(w, req)
-	} else {
-		http.NotFound(w, req)
-	}
+	c := newContext(w, req)
+	e.router.handle(c)
 }
