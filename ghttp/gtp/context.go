@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-type H map[string]interface{}
+type H map[string]any
 
 type Context struct {
 	Writer http.ResponseWriter
@@ -15,6 +15,7 @@ type Context struct {
 	// req info
 	Path   string
 	Method string
+	Params map[string]string
 
 	// resp info
 	StatusCode int
@@ -27,6 +28,13 @@ func newContext(w http.ResponseWriter, req *http.Request) *Context {
 		Path:   req.URL.Path,
 		Method: req.Method,
 	}
+}
+
+func (c *Context) Param(key string) string {
+	if value, ok := c.Params[key]; ok {
+		return value
+	}
+	return ""
 }
 
 func (c *Context) PostForm(key string) string {
