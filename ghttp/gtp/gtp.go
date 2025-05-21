@@ -8,27 +8,53 @@ import (
 
 type HandlerFunc func(*Context)
 
-type Engine struct {
-	router *router
-}
+type (
+	RouterGroup struct {
+		prefix      string
+		middlewares []HandlerFunc
+		parent      *RouterGroup
+		engine      *Engine
+	}
+
+	Engine struct {
+		*RouterGroup
+		router *router
+		groups []*RouterGroup
+	}
+)
 
 func New() *Engine {
-	return &Engine{
-		router: newRouter(),
+	engine := &Engine{router: newRouter()}
+	engine.RouterGroup = &RouterGroup{engine: engine}
+	engine.groups = []*RouterGroup{engine.RouterGroup}
+	return engine
+}
+
+func (group *RouterGroup) Group(prefix string) *RouterGroup {
+	engine := group.engine
+	newGroup := &RouterGroup{
+		prefix: group.prefix + prefix,
+		parent: group,
+		engine: engine,
 	}
+	engine.groups = append(engine.groups, newGroup)
+	return newGroup
 }
 
-func (e *Engine) addRoute(method string, path string, handler HandlerFunc) {
-	log.Printf("Route %4s - %s", method, path)
-	e.router.addRoute(method, path, handler)
+func (group *RouterGroup) addRoute(method string, comp string, handler HandlerFunc) {
+	pattern := group.prefix + comp
+	log.Printf("Route %4s - %s", method, pattern)
+	group.engine.router.addRoute(method, pattern, handler)
 }
 
-func (e *Engine) GET(path string, handler HandlerFunc) {
-	e.addRoute("GET", path, handler)
+// GET defines the method to add GET request
+func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
+	group.addRoute("GET", pattern, handler)
 }
 
-func (e *Engine) POST(path string, handler HandlerFunc) {
-	e.addRoute("POST", path, handler)
+// POST defines the method to add POST request
+func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
+	group.addRoute("POST", pattern, handler)
 }
 
 func (e *Engine) Run(addr string) error {
